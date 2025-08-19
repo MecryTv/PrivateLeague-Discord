@@ -1,0 +1,5 @@
+.idea
+node_modules
+.env
+Discord.iml
+package-lock.json
