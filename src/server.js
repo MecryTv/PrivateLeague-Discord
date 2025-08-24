@@ -3,8 +3,8 @@ const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
-
 const logger = require("./logger");
+
 logger.mtvBanner(logger.colors.green);
 
 const app = express();
