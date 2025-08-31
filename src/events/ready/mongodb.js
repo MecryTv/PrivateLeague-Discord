@@ -5,7 +5,7 @@ const logger = require("../../utils/logger");
 
 class Mongodb extends Event {
     constructor(client) {
-        super(client, "ready", false);
+        super(client, "ready", true);
     }
 
     async execute() {

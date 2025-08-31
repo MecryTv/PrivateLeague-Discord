@@ -4,7 +4,7 @@ const logger = require("../../utils/logger");
 
 class Bot extends Event {
     constructor(client) {
-        super(client, "ready", false);
+        super(client, "ready", true);
     }
 
     async execute() {
