@@ -1,26 +1,35 @@
-const { ActivityType } = require("discord.js");
-const logger = require('../../logger.js');
+const Event = require("../../structures/Events");
+const {ActivityType} = require("discord.js");
+const logger = require("../../utils/logger");
 
-module.exports = (client) => {
-    logger.info(`✅ Logged in as ${client.user.username}`);
+class Bot extends Event {
+    constructor(client) {
+        super(client, "ready", false);
+    }
 
-    let status = [
-        {
-            name: "Private League Games",
-            type: ActivityType.Watching,
-        },
-        {
-            name: "Use /help",
-            type: ActivityType.Listening,
-        },
-        {
-            name: "Developed by MecryTv",
-            type: ActivityType.Custom,
-        },
-    ];
+    async execute() {
+        logger.info(`✅  Logged in as ${this.client.user.username}`);
 
-    setInterval(() => {
-        let randomStatus = Math.floor(Math.random() * status.length);
-        client.user.setActivity(status[randomStatus]);
-    }, 10000);
+        let status = [
+            {
+                name: "Private League Games",
+                type: ActivityType.Watching,
+            },
+            {
+                name: "Use /help",
+                type: ActivityType.Listening,
+            },
+            {
+                name: "Developed by MecryTv",
+                type: ActivityType.Custom,
+            },
+        ];
+
+        setInterval(() => {
+            let randomStatus = Math.floor(Math.random() * status.length);
+            this.client.user.setActivity(status[randomStatus]);
+        }, 10000);
+    }
 }
+
+module.exports = Bot;
