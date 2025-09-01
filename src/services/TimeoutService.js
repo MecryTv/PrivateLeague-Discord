@@ -73,7 +73,8 @@ class TimeoutService {
             const thumbnail = new ThumbnailBuilder()
                 .setURL(user.displayAvatarURL ? user.displayAvatarURL() : "");
 
-            const separator = new SeparatorBuilder();
+            const separator1 = new SeparatorBuilder();
+            const separator2 = new SeparatorBuilder();
 
             const mainText = new TextDisplayBuilder()
                 .setContent(
@@ -97,9 +98,10 @@ class TimeoutService {
 
             const container = new ContainerBuilder()
                 .addTextDisplayComponents(header)
-                .addSeparatorComponents(separator)
+                .addSeparatorComponents(separator1)
                 .addSectionComponents(section)
-                .addMediaGalleryComponents(image);
+                .addMediaGalleryComponents(image)
+                .addSeparatorComponents(separator2);
 
             const thread = await this.client.channels.fetch(this.logThreadId).catch(() => null);
             if (!thread) {
