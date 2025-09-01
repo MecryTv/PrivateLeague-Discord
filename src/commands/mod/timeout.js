@@ -3,6 +3,7 @@ const {SlashCommandBuilder, PermissionsBitField} = require("discord.js");
 const TimeoutService = require("../../services/TimeoutService");
 const logger = require("../../utils/logger");
 const ActiveTimeoutModel = require("../../models/mod/ActiveTimeouts");
+const InactiveTimeoutModel = require("../../models/mod/InactiveTimeouts");
 
 
 class Timeout extends Command {
@@ -140,6 +141,79 @@ class Timeout extends Command {
 
                 return interaction.reply({
                     content: `${user.tag} wurde für \`${duration}\` in den Timeout gesetzt.\nStart: <t:${startTimestampSec}:F>\nEnde: <t:${endTimestampSec}:F>\nCase ID: ${caseId}`,
+                    ephemeral: true
+                });
+            } else if (subcommand === "remove") {
+                const user = interaction.options.getUser("user");
+                const reason = interaction.options.getString("grund");
+                const actor = interaction.user;
+
+                const activeTimeoutData = await ActiveTimeoutModel.findOne({userId: user.id});
+
+                if (!activeTimeoutData) {
+                    return interaction.reply({content: "Dieser Benutzer ist nicht im Timeout", ephemeral: true});
+                }
+
+                const activeReasonData = activeTimeoutData.reason;
+                const activeModData = activeTimeoutData.modId;
+                const activeCaseId = activeTimeoutData.caseId;
+                const activeStartTimestamp = activeTimeoutData.startTimestamp;
+                const activeEndTimestamp = activeTimeoutData.endTimestamp;
+
+                const inactiveTimeoutData = await InactiveTimeoutModel.create({userId: user.id});
+                inactiveTimeoutData.reason = activeReasonData;
+                inactiveTimeoutData.modId = activeModData;
+                inactiveTimeoutData.caseId = activeCaseId;
+                inactiveTimeoutData.startTimestamp = activeStartTimestamp;
+                inactiveTimeoutData.endTimestamp = activeEndTimestamp;
+
+                const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+                if (!member) {
+                    return interaction.reply({content: "Benutzer nicht auf dem Server gefunden.", ephemeral: true});
+                }
+
+                const requiredPerms = [PermissionsBitField.Flags.ModerateMembers];
+                const invokerHas = interaction.memberPermissions?.has(requiredPerms);
+                if (!invokerHas) {
+                    return interaction.reply({
+                        content: "Du brauchst die Berechtigung: `Moderate Members`.",
+                        ephemeral: true
+                    });
+                }
+
+                const invoker = interaction.member;
+                const botMember = interaction.guild.members.me || await interaction.guild.members.fetch(interaction.client.user.id).catch(() => null);
+
+                if (invoker.roles?.highest && member.roles?.highest && invoker.roles.highest.position <= member.roles.highest.position && interaction.guild.ownerId !== invoker.id) {
+                    return interaction.reply({
+                        content: "Du kannst keinen Benutzer mit gleicher/höherer Rolle bearbeiten.",
+                        ephemeral: true
+                    });
+                }
+                if (botMember && botMember.roles?.highest && member.roles?.highest && botMember.roles.highest.position <= member.roles.highest.position) {
+                    return interaction.reply({
+                        content: "Ich kann diesen Benutzer aufgrund der Rollen-Hierarchie nicht ent-timeouten.",
+                        ephemeral: true
+                    });
+                }
+
+                if (!botMember) {
+                    return interaction.reply({content: "Konnte Bot-GuildMember nicht ermitteln.", ephemeral: true});
+                }
+                if (!botMember.permissions?.has(requiredPerms)) {
+                    return interaction.reply({
+                        content: "Ich brauche die Berechtigung: `Moderate Members` (oder sie fehlt mir).",
+                        ephemeral: true
+                    });
+                }
+
+                const {userId} = await service.removeTimeout(member, actor, reason, activeCaseId);
+
+                inactiveTimeoutData.save();
+                await ActiveTimeoutModel.deleteOne({userId: user.id});
+
+                return interaction.reply({
+                    content: `Der User ${user} | ${userId} wurde aus dem Timeout entfernt`,
                     ephemeral: true
                 });
             }

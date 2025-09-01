@@ -47,7 +47,7 @@ class TimeoutService {
         }
     }
 
-    async logTimeout({user, actor, durationMs, reason, caseId}) {
+    async logTimeout({user, actor, durationMs, reason, caseId, type}) {
         if (!this.logThreadId) return;
 
         try {
@@ -68,7 +68,7 @@ class TimeoutService {
             const formatted = `${day}.${month}.${year} ${hour}:${minute}:${second}`;
 
             const header = new TextDisplayBuilder()
-                .setContent(`## __[${formatted}] | ACTION: TIMEOUT__`);
+                .setContent(`## __[${formatted}] | ACTION: TIMEOUT (${type})__`);
 
             const thumbnail = new ThumbnailBuilder()
                 .setURL(user.displayAvatarURL ? user.displayAvatarURL() : "");
@@ -143,7 +143,8 @@ class TimeoutService {
             actor: actor,
             durationMs: ms,
             reason,
-            caseId
+            caseId,
+            type: "ADD"
         }).catch(() => null);
 
         const startTimestampSec = Math.floor(Date.now() / 1000);
@@ -155,26 +156,28 @@ class TimeoutService {
     /**
      * Entfernt den Timeout (setzt ihn auf null).
      * @param {import("discord.js").GuildMember} member
+     * @param {import("discord.js").User} actor
      * @param {string} reason
-     * @returns {Promise<{caseId:string}>}
+     * @param {string} caseId
+     *  @returns {Promise<{userId:string}>}
      */
-    async removeTimeout(member, reason) {
+    async removeTimeout(member, actor, reason, caseId) {
         if (!member || typeof member.timeout !== "function") {
             throw new Error("Ungültiges GuildMember Objekt.");
         }
 
-        const caseId = `CASE#${Date.now()}`;
         await member.timeout(null, reason);
 
         this.logTimeout({
             user: member.user,
-            actor: member.client ? member.client.user : {id: "unknown", tag: "unknown"},
+            actor: actor,
             durationMs: null,
             reason,
-            caseId
+            caseId,
+            type: "REMOVE"
         }).catch(() => null);
 
-        return {caseId};
+        return {userId: member.id};
     }
 }
 
