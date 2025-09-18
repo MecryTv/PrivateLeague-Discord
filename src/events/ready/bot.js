@@ -12,7 +12,7 @@ class Bot extends Event {
 
         let status = [
             {
-                name: "WTS Liga Games",
+                name: "Private League Games",
                 type: ActivityType.Watching,
             },
             {
