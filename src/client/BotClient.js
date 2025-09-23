@@ -74,6 +74,10 @@ class BotClient extends Client {
 
         let count = 0;
         for (const folder of eventFolders) {
+            if (folder === "client") {
+                continue;
+            }
+
             const folderPath = path.join(eventsPath, folder);
             const eventFiles = this.getAllFiles(folderPath);
 
