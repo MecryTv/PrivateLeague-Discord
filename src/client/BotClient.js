@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const logger = require("../utils/logger");
 const { TOKEN, CLIENT_ID } = require('../../config.json');
+const ModalService = require("../services/ModalService");
 
 class BotClient extends Client {
     constructor() {
@@ -105,6 +106,8 @@ class BotClient extends Client {
     }
 
     async start(token) {
+        logger.info(`💾 ${ModalService.getModelCount()} Modals geladen`);
+
         await this.loadAndRegisterCommands();
         await this.loadEvents();
         await this.login(token);
