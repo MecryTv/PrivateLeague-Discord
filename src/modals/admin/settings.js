@@ -1,0 +1,13 @@
+const mongoose = require("mongoose");
+
+const Settings = mongoose.model(
+    "Settings",
+  new mongoose.Schema({
+      welcomeChannelId: { type: String },
+      ticketsChannelId: { type: String },
+      logChannelId: { type: String },
+      applicationChannelId: { type: String },
+  })
+);
+
+module.exports = Settings;

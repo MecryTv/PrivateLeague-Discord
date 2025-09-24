@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Welcome Channel",
+    "description": "Channel für Willkommensnachrichten",
+    "value": "welcomeChannelId"
+  },
+  {
+    "name": "Tickets Channel",
+    "description": "Channel für Tickets",
+    "value": "ticketsChannelId"
+  },
+  {
+    "name": "Log Channel",
+    "description": "Channel für Logs",
+    "value": "logChannelId"
+  },
+  {
+    "name": "Bewerbungs Channel",
+    "description": "Channel für Bewerbungen",
+    "value": "applicationChannelId"
+  }
+]
