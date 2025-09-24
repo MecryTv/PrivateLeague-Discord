@@ -9,6 +9,7 @@ const ConfigService = require("../../services/ConfigService");
 const ChannelTypes = require("../../enums/ChannelTypes");
 const ModalService = require("../../services/ModalService");
 const updateSettingsMessage = require("../../utils/settings/updateSettingsMessage");
+const logger = require("../../utils/logger");
 
 class Settings extends Event {
     constructor(client) {
@@ -60,7 +61,7 @@ class Settings extends Event {
                                 components: []
                             });
                         } catch (error) {
-                            console.error("Fehler beim Setzen des Willkommenskanals:", error);
+                            logger.error("Fehler beim Setzen des Willkommenskanals:", error);
                             await i.editReply({
                                 content: "Es gab einen Fehler beim Setzen des Willkommenskanals. Bitte versuche es erneut.",
                                 components: []
@@ -87,11 +88,201 @@ class Settings extends Event {
                 });
 
             } else if (selectedOption === "ticketsChannelId") {
+                const ticketForumSelect = new ChannelSelectMenuBuilder()
+                    .setCustomId("ticketForum-select")
+                    .setPlaceholder("Forum auswählen")
+                    .setMinValues(1)
+                    .setMaxValues(1)
+                    .addChannelTypes([ChannelTypes.Forum]);
+
+                const ticketRow = new ActionRowBuilder().addComponents(ticketForumSelect);
+
+                const timeoutDuration = 10000;
+                const expiryTimestamp = Math.floor((Date.now() + timeoutDuration) / 1000);
+
+                const message = await interaction.reply({
+                    content: `Wähle das Ticket-Forum aus. Die Auswahl schließt sich ${`<t:${expiryTimestamp}:R>`}`,
+                    components: [ticketRow],
+                    ephemeral: true,
+                    fetchReply: true
+                });
+
+                const collector = message.createMessageComponentCollector({
+                    filter: i => i.user.id === interaction.user.id,
+                    time: timeoutDuration
+                });
+
+                collector.on('collect', async i => {
+                    if (i.customId === 'ticketForum-select') {
+                        try {
+                            await i.deferUpdate();
+
+                            const selectedChannelId = i.values[0];
+                            await ModalService("settings", {}, {$set: {ticketsChannelId: selectedChannelId}}, {upsert: true});
+
+                            await updateSettingsMessage(interaction);
+
+                            await i.editReply({
+                                content: `Das Ticket-Forum wurde erfolgreich auf <#${selectedChannelId}> gesetzt.`,
+                                components: []
+                            });
+                        } catch (error) {
+                            logger.error("Fehler beim Setzen des Ticket-Forums:", error);
+                            await i.editReply({
+                                content: "Es gab einen Fehler beim Setzen des Ticket-Forums. Bitte versuche es erneut.",
+                                components: []
+                            });
+                        }
+                    }
+                });
+
+                collector.on('end', collected => {
+                    if (collected.size === 0) {
+                        const disabledSelect = new ChannelSelectMenuBuilder()
+                            .setCustomId("ticketForum-select")
+                            .setPlaceholder("Zeit abgelaufen")
+                            .setDisabled(true)
+                            .addChannelTypes([ChannelTypes.Forum]);
+
+                        const disabledRow = new ActionRowBuilder().addComponents(disabledSelect);
+
+                        interaction.editReply({
+                            content: "Die Zeit für die Auswahl ist abgelaufen.",
+                            components: [disabledRow]
+                        });
+                    }
+                });
 
             } else if (selectedOption === "logChannelId") {
+                const ticketForumSelect = new ChannelSelectMenuBuilder()
+                    .setCustomId("logForum-select")
+                    .setPlaceholder("Forum auswählen")
+                    .setMinValues(1)
+                    .setMaxValues(1)
+                    .addChannelTypes([ChannelTypes.Forum]);
 
+                const ticketRow = new ActionRowBuilder().addComponents(ticketForumSelect);
+
+                const timeoutDuration = 10000;
+                const expiryTimestamp = Math.floor((Date.now() + timeoutDuration) / 1000);
+
+                const message = await interaction.reply({
+                    content: `Wähle das Ticket-Forum aus. Die Auswahl schließt sich ${`<t:${expiryTimestamp}:R>`}`,
+                    components: [ticketRow],
+                    ephemeral: true,
+                    fetchReply: true
+                });
+
+                const collector = message.createMessageComponentCollector({
+                    filter: i => i.user.id === interaction.user.id,
+                    time: timeoutDuration
+                });
+
+                collector.on('collect', async i => {
+                    if (i.customId === 'logForum-select') {
+                        try {
+                            await i.deferUpdate();
+
+                            const selectedChannelId = i.values[0];
+                            await ModalService("settings", {}, {$set: {logChannelId: selectedChannelId}}, {upsert: true});
+
+                            await updateSettingsMessage(interaction);
+
+                            await i.editReply({
+                                content: `Das Ticket-Forum wurde erfolgreich auf <#${selectedChannelId}> gesetzt.`,
+                                components: []
+                            });
+                        } catch (error) {
+                            logger.error("Fehler beim Setzen des Ticket-Forums:", error);
+                            await i.editReply({
+                                content: "Es gab einen Fehler beim Setzen des Ticket-Forums. Bitte versuche es erneut.",
+                                components: []
+                            });
+                        }
+                    }
+                });
+
+                collector.on('end', collected => {
+                    if (collected.size === 0) {
+                        const disabledSelect = new ChannelSelectMenuBuilder()
+                            .setCustomId("logForum-select")
+                            .setPlaceholder("Zeit abgelaufen")
+                            .setDisabled(true)
+                            .addChannelTypes([ChannelTypes.Forum]);
+
+                        const disabledRow = new ActionRowBuilder().addComponents(disabledSelect);
+
+                        interaction.editReply({
+                            content: "Die Zeit für die Auswahl ist abgelaufen.",
+                            components: [disabledRow]
+                        });
+                    }
+                });
             } else if (selectedOption === "applicationChannelId") {
+                const ticketForumSelect = new ChannelSelectMenuBuilder()
+                    .setCustomId("applicationForum-select")
+                    .setPlaceholder("Forum auswählen")
+                    .setMinValues(1)
+                    .setMaxValues(1)
+                    .addChannelTypes([ChannelTypes.Forum]);
 
+                const ticketRow = new ActionRowBuilder().addComponents(ticketForumSelect);
+
+                const timeoutDuration = 10000;
+                const expiryTimestamp = Math.floor((Date.now() + timeoutDuration) / 1000);
+
+                const message = await interaction.reply({
+                    content: `Wähle das Ticket-Forum aus. Die Auswahl schließt sich ${`<t:${expiryTimestamp}:R>`}`,
+                    components: [ticketRow],
+                    ephemeral: true,
+                    fetchReply: true
+                });
+
+                const collector = message.createMessageComponentCollector({
+                    filter: i => i.user.id === interaction.user.id,
+                    time: timeoutDuration
+                });
+
+                collector.on('collect', async i => {
+                    if (i.customId === 'applicationForum-select') {
+                        try {
+                            await i.deferUpdate();
+
+                            const selectedChannelId = i.values[0];
+                            await ModalService("settings", {}, {$set: {applicationChannelId: selectedChannelId}}, {upsert: true});
+
+                            await updateSettingsMessage(interaction);
+
+                            await i.editReply({
+                                content: `Das Ticket-Forum wurde erfolgreich auf <#${selectedChannelId}> gesetzt.`,
+                                components: []
+                            });
+                        } catch (error) {
+                            logger.error("Fehler beim Setzen des Ticket-Forums:", error);
+                            await i.editReply({
+                                content: "Es gab einen Fehler beim Setzen des Ticket-Forums. Bitte versuche es erneut.",
+                                components: []
+                            });
+                        }
+                    }
+                });
+
+                collector.on('end', collected => {
+                    if (collected.size === 0) {
+                        const disabledSelect = new ChannelSelectMenuBuilder()
+                            .setCustomId("applicationForum-select")
+                            .setPlaceholder("Zeit abgelaufen")
+                            .setDisabled(true)
+                            .addChannelTypes([ChannelTypes.Forum]);
+
+                        const disabledRow = new ActionRowBuilder().addComponents(disabledSelect);
+
+                        interaction.editReply({
+                            content: "Die Zeit für die Auswahl ist abgelaufen.",
+                            components: [disabledRow]
+                        });
+                    }
+                });
             }
 
             const channelConfig = ConfigService.get("channels");
