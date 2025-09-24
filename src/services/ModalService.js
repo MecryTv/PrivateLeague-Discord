@@ -90,9 +90,9 @@ class ModalService {
         return await Model.find(query).exec();
     }
 
-    async updateOne(modelName, query, updateData) {
+    async updateOne(modelName, query, updateData, options = {}) {
         const Model = this._getModel(modelName);
-        return await Model.findOneAndUpdate(query, updateData, { new: true }).exec();
+        return await Model.findOneAndUpdate(query, updateData, { new: true, ...options }).exec();
     }
 
     async deleteOne(modelName, query) {
