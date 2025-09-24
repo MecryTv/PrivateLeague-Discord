@@ -13,7 +13,7 @@ class Mongodb extends Event {
 
         try {
             await mongoose.connect(MONGO_URL);
-            logger.info("MongoDB Connected");
+            logger.info("✅  MongoDB Connected");
         } catch (error) {
             logger.error("MongoDB Connection Error: ", error);
         }
