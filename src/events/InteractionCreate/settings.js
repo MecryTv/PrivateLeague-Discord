@@ -53,6 +53,12 @@ class Settings extends Event {
                 replyContent = "Wähle das Bewerbungs-Forum aus.";
                 successMessage = "Das Bewerbungs-Forum wurde erfolgreich auf <#${selectedChannelId}> gesetzt.";
                 errorMessage = "Es gab einen Fehler beim Setzen des Bewerbungs-Forums. Bitte versuche es erneut.";
+            } else if (selectedOption === "supportChannelId"){
+                channelType = ChannelTypes.Text;
+                placeholder = "Kanal auswählen";
+                replyContent = "Wähle den Support-Kanal aus.";
+                successMessage = "Der Support-Kanal wurde erfolgreich auf <#${selectedChannelId}> gesetzt.";
+                errorMessage = "Es gab einen Fehler beim Setzen des Support-Kanals. Bitte versuche es erneut.";
             }
 
             customId = `${selectedOption}-select`;

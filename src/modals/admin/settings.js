@@ -7,6 +7,7 @@ const Settings = mongoose.model(
       ticketsChannelId: { type: String },
       logChannelId: { type: String },
       applicationChannelId: { type: String },
+      supportChannelId: { type: String },
   })
 );
 
