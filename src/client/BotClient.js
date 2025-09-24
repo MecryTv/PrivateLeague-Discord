@@ -107,7 +107,7 @@ class BotClient extends Client {
     }
 
     async start(token) {
-        logger.info(`💾 ${ModalService.getModelCount()} Modals geladen`);
+        logger.info(`💾  ${ModalService.getModelCount()} Modals geladen`);
         logger.info(`⚙️  ${ConfigService.getConfigCount()} Konfigurationen geladen`);
 
         await this.loadAndRegisterCommands();
