@@ -1,37 +1,33 @@
 /**
  * Erzeugt den formatierten Anzeigetext für die Bot-Einstellungen.
  * @param {object | null} dbSettings - Das Einstellungs-Dokument aus der Datenbank.
- * @param {Array<object>} channelConfig - Das spezifische Konfigurationsarray für die Channels aus der JSON.
+ * @param {Array<object>} roleConfig - Das spezifische Konfigurationsarray für die Channels aus der JSON.
  * @returns {string} Der formatierte String für die Anzeige in Discord.
  */
-function generateSettingsText(dbSettings, channelConfig) {
+function generateRoleText(dbSettings, roleConfig) {
     const currentSettings = dbSettings || {};
 
-    if (!channelConfig || channelConfig.length === 0) {
-        return "Keine Kanäle in der Konfiguration gefunden.";
+    if (!roleConfig || roleConfig.length === 0) {
+        return "Keine Rollen in der Konfiguration gefunden.";
     }
 
-    const displayableChannels = channelConfig.filter(channel => channel.value !== "main");
+    const displayableRoles = roleConfig.filter(role => role.value !== "main");
 
-    const channelMappings = {
-        welcomeChannelId: { icon: "🎉", label: "Willkommens" },
-        ticketsChannelId: { icon: "🎫", label: "Tickets" },
-        logChannelId: { icon: "📋", label: "Log" },
-        applicationChannelId: { icon: "📄", label: "Bewerbungs" },
-        supportChannelId: { icon: "💬", label: "Support" }
-    };
+    const roleMappings = {
+        supportPingRoleId: { icon: "💬", label: "Support Ping" },
+    }
 
-    const settingsLines = displayableChannels.map(channel => {
-        const channelId = currentSettings[channel.value];
-        const mapping = channelMappings[channel.value];
+    const settingsLines = displayableRoles.map(role => {
+        const roleId = currentSettings[role.value];
+        const mapping = roleMappings[role.value];
 
         if (!mapping) return null;
 
-        const isSet = channelId && channelId !== "Nicht gesetzt";
+        const isSet = roleId && roleId !== "Nicht gesetzt";
         const statusIcon = isSet ? "✅" : "❌";
-        const channelDisplay = isSet ? `<#${channelId}>` : "`Nicht konfiguriert`";
+        const roleDisplay = isSet ? `<@&${roleId}>` : "`Nicht konfiguriert`";
 
-        return `${statusIcon} ${mapping.icon} **${mapping.label} Channel:** ${channelDisplay}`;
+        return `${statusIcon} ${mapping.icon} **${mapping.label} Rolle:** ${roleDisplay}`;
     }).filter(Boolean);
 
     if (settingsLines.length === 0) {
@@ -62,10 +58,11 @@ function generateStatusBar(percentage) {
     const emptyBar = "░".repeat(emptyLength);
 
     let color = "🔴";
-    if (percentage >= 34 && percentage <= 66) color = "🟡";
-    if (percentage >= 67) color = "🟢";
+    if (percentage >= 25 ) color = "🟠";
+    if (percentage >= 50) color = "🟡";
+    if (percentage >= 75) color = "🟢";
 
     return `${color} \`${filledBar}${emptyBar}\` ${percentage}%`;
 }
 
-module.exports = generateSettingsText;
+module.exports = generateRoleText;

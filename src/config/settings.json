@@ -13,6 +13,18 @@
         "value": "role"
       }
     ],
+    "roles": [
+      {
+        "name": "Hauptmenü",
+        "description": "Kehre zum Hauptmenü zurück",
+        "value": "main"
+      },
+      {
+        "name": "Support Ping",
+        "description": "Rolle für Support Pings",
+        "value": "supportPingRoleId"
+      }
+    ],
     "channel": [
       {
         "name": "Hauptmenü",

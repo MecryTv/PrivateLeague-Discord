@@ -8,20 +8,21 @@ const {
 } = require("discord.js");
 const ModalService = require("../../services/ModalService");
 const ConfigService = require("../../services/ConfigService");
-const generateSettingsText = require("./generateSettingsText");
+const generateChannelText = require("./generateChannelText");
+const logger = require("../../utils/logger");
 
 /**
  * Aktualisiert die Einstellungsnachricht und zeigt weiterhin das Channel-Menü an.
  * @param {import('discord.js').Interaction} interaction Die ursprüngliche Interaktion.
  */
-async function updateSettingsMessage(interaction) {
+async function updateChannelText(interaction) {
     try {
         const newDbSettings = await ModalService.findOne("settings");
         const settingsConfig = ConfigService.get("settings")[0];
         const channelConfig = settingsConfig.channel;
 
         const title = new TextDisplayBuilder().setContent("# Channel Einstellungen");
-        const settingsContent = generateSettingsText(newDbSettings, channelConfig);
+        const settingsContent = generateChannelText(newDbSettings, channelConfig);
         const text = new TextDisplayBuilder().setContent(settingsContent);
         const separator = new SeparatorBuilder();
         const spacer = new TextDisplayBuilder().setContent('\u200B');
@@ -33,7 +34,7 @@ async function updateSettingsMessage(interaction) {
             .addTextDisplayComponents(text);
 
         const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId("channel-select") // Die ID des Channel-Menüs
+            .setCustomId("channel-select")
             .setPlaceholder("📁 | Wähle einen Kanal")
             .addOptions(
                 channelConfig.map((channel) =>
@@ -50,8 +51,8 @@ async function updateSettingsMessage(interaction) {
         });
 
     } catch (error) {
-        console.error("Fehler beim Aktualisieren der Settings-Nachricht:", error);
+        logger.error("Fehler beim Aktualisieren der Channel Nachricht:", error);
     }
 }
 
-module.exports = updateSettingsMessage;
+module.exports = updateChannelText;

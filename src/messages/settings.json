@@ -13,9 +13,18 @@
     "title": "# Channel Einstellungen",
     "menuPlaceholder": "📁 | Wähle einen Kanal"
   },
+    "roleMenu": {
+        "title": "# Rollen Einstellungen",
+        "menuPlaceholder": "🎭 | Wähle eine Rolle"
+    },
   "error": {
     "configNotFound": "Die Konfigurationsdatei 'settings.json' konnte nicht gefunden werden.",
     "channelNotFound": "Diese Kanal-Einstellung wurde nicht in der Konfiguration gefunden."
+  },
+  "roleSelector": {
+    "replyContent": "Wähle den Kanal für **{roleName}**.",
+    "successMessage": "Der Kanal für **{roleName}** wurde auf <#{roleId}> gesetzt.",
+    "errorMessage": "Fehler beim Setzen des Kanals für **{roleName}**."
   },
   "channelSelector": {
     "replyContent": "Wähle den Kanal für **{channelName}**.",

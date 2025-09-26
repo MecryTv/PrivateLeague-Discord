@@ -9,6 +9,7 @@ const Settings = mongoose.model(
       logChannelId: { type: String },
       applicationChannelId: { type: String },
       supportChannelId: { type: String },
+      supportPingRoleId: { type: String },
   })
 );
 
