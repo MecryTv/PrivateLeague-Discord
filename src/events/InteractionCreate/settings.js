@@ -14,6 +14,7 @@ const ModalService = require("../../services/ModalService");
 const updateSettingsMessage = require("../../utils/settings/updateSettingsMessage");
 const generateSettingsText = require("../../utils/settings/generateSettingsText");
 const logger = require("../../utils/logger");
+const MessageService = require("../../services/MessageService");
 
 class Settings extends Event {
     constructor(client) {
@@ -27,11 +28,10 @@ class Settings extends Event {
 
         const settingsConfig = ConfigService.get("settings");
         if (!settingsConfig || !settingsConfig[0]) {
-            return interaction.reply({ content: "Konfigurationsdatei 'settings.json' nicht gefunden.", ephemeral: true });
+            return interaction.reply({content: MessageService.get("settings..error.configNotFound"), ephemeral: true});
         }
         const config = settingsConfig[0];
 
-        // Bestätige die Interaktion sofort, um "Interaction has failed" zu verhindern.
         await interaction.deferUpdate();
 
         if (interaction.customId === "settings-select") {
@@ -39,10 +39,11 @@ class Settings extends Event {
 
             if (selectedOption === "channel") {
                 const channelConfig = config.channel;
+                const menuMessages = MessageService.get("settings.channelMenu");
 
                 const selectMenu = new StringSelectMenuBuilder()
                     .setCustomId("channel-select")
-                    .setPlaceholder("📁 | Wähle eine Kanaleinstellung zum Ändern")
+                    .setPlaceholder(menuMessages.menuPlaceholder)
                     .addOptions(
                         channelConfig.map((channel) =>
                             new StringSelectMenuOptionBuilder()
@@ -53,18 +54,11 @@ class Settings extends Event {
                     );
                 const actionRow = new ActionRowBuilder().addComponents(selectMenu);
 
-                const title = new TextDisplayBuilder().setContent("# Channel Einstellungen");
-                const settingsData = await ModalService.findOne("settings");
-                const settingsContent = generateSettingsText(settingsData, channelConfig);
-                const text = new TextDisplayBuilder().setContent(settingsContent);
-                const separator = new SeparatorBuilder();
-                const spacer = new TextDisplayBuilder().setContent('\u200B');
-
-                const container = new ContainerBuilder()
-                    .addTextDisplayComponents(title)
-                    .addSeparatorComponents(separator)
-                    .addTextDisplayComponents(spacer)
-                    .addTextDisplayComponents(text);
+                const settingsData = await ModalService.findOne("settings", { guildId: interaction.guild.id });
+                const container = this.buildContainer(
+                    menuMessages.title,
+                    generateSettingsText(settingsData, channelConfig)
+                )
 
                 await interaction.editReply({
                     components: [container, actionRow]
@@ -75,10 +69,21 @@ class Settings extends Event {
 
             if (selectedOption === "main") {
                 const pages = config.pages;
+                const menuMessages = MessageService.get("settings.mainMenu");
+
+                const title = MessageService.get("settings.mainMenu.title");
+                const text = MessageService.get("settings.mainMenu.text");
+
+                if (!title || !text) {
+                    return interaction.followUp({
+                        content: "Fehler: Hauptmenü-Texte konnten nicht geladen werden.",
+                        ephemeral: true
+                    });
+                }
 
                 const mainMenu = new StringSelectMenuBuilder()
                     .setCustomId("settings-select")
-                    .setPlaceholder("📜 | Wähle eine Kategorie")
+                    .setPlaceholder(menuMessages.menuPlaceholder)
                     .addOptions(
                         pages.map(page =>
                             new StringSelectMenuOptionBuilder()
@@ -89,20 +94,7 @@ class Settings extends Event {
                     );
                 const actionRow = new ActionRowBuilder().addComponents(mainMenu);
 
-                // --- KORREKTUR HIER ---
-                // Setze den Titel und den Text auf den Standardwert des Hauptmenüs zurück.
-                const title = new TextDisplayBuilder().setContent("# Bot Einstellungen");
-                const text = new TextDisplayBuilder().setContent("Wähle eine Kategorie aus, um die entsprechenden Einstellungen anzuzeigen und zu bearbeiten.");
-                // --- ENDE DER KORREKTUR ---
-
-                const separator = new SeparatorBuilder();
-                const spacer = new TextDisplayBuilder().setContent('\u200B');
-
-                const container = new ContainerBuilder()
-                    .addTextDisplayComponents(title)
-                    .addSeparatorComponents(separator)
-                    .addTextDisplayComponents(spacer)
-                    .addTextDisplayComponents(text);
+                const container = this.buildContainer(title, text);
 
                 await interaction.editReply({
                     components: [container, actionRow]
@@ -111,7 +103,7 @@ class Settings extends Event {
             }
             const channelDetails = config.channel.find(c => c.value === selectedOption);
             if (!channelDetails) {
-                return interaction.followUp({ content: "Kanal-Einstellung nicht gefunden.", ephemeral: true });
+                return interaction.followUp({content: "Kanal-Einstellung nicht gefunden.", ephemeral: true});
             }
 
             let channelType = ChannelTypes.Text;
@@ -125,15 +117,36 @@ class Settings extends Event {
                 customId: `${selectedOption}-select`,
                 placeholder,
                 channelType,
-                replyContent: `Wähle den Kanal für **${channelDetails.name}**.`,
-                successMessage: `Der Kanal für **${channelDetails.name}** wurde auf <#\${selectedChannelId}> gesetzt.`,
-                errorMessage: `Fehler beim Setzen des Kanals für **${channelDetails.name}**.`,
+                replyContent: MessageService.get("settings.channelSelector.replyContent", {channelName: channelDetails.name}),
+                successMessage: MessageService.get("settings.channelSelector.successMessage", {channelName: channelDetails.name}),
+                errorMessage: MessageService.get("settings.channelSelector.errorMessage", {channelName: channelDetails.name}),
                 dbKey: selectedOption
             });
         }
     }
 
-    async handleChannelSelection(interaction, { customId, placeholder, channelType, replyContent, successMessage, errorMessage, dbKey }) {
+    buildContainer(titleContent, textContent) {
+        const title = new TextDisplayBuilder().setContent(titleContent);
+        const text = new TextDisplayBuilder().setContent(textContent);
+        const separator = new SeparatorBuilder();
+        const spacer = new TextDisplayBuilder().setContent('\u200B');
+
+        return new ContainerBuilder()
+            .addTextDisplayComponents(title)
+            .addSeparatorComponents(separator)
+            .addTextDisplayComponents(spacer)
+            .addTextDisplayComponents(text);
+    }
+
+    async handleChannelSelection(interaction, {
+        customId,
+        placeholder,
+        channelType,
+        replyContent,
+        successMessage,
+        errorMessage,
+        dbKey
+    }) {
         const selectMenu = new ChannelSelectMenuBuilder()
             .setCustomId(customId)
             .setPlaceholder(placeholder)
@@ -141,8 +154,6 @@ class Settings extends Event {
         const actionRow = new ActionRowBuilder().addComponents(selectMenu);
         const timeoutDuration = 60000;
 
-        // Nutze followUp, um eine neue, unsichtbare Nachricht zu senden.
-        // Das ist der korrekte Weg, nachdem die Hauptinteraktion bereits bestätigt wurde.
         const message = await interaction.followUp({
             content: replyContent,
             components: [actionRow],
@@ -157,27 +168,34 @@ class Settings extends Event {
         collector.on('collect', async i => {
             try {
                 await i.deferUpdate();
-                const selectedChannelId = i.values[0];
-                await ModalService.updateOne("settings", {}, { $set: { [dbKey]: selectedChannelId } }, { upsert: true });
 
-                // Übergib die ursprüngliche Interaktion, deren Nachricht wir bearbeiten wollen
+                const selectedChannelId = i.values[0];
+                await ModalService.updateOne(
+                    "settings",
+                    { guildId: interaction.guild.id },
+                    { $set: { [dbKey]: selectedChannelId, guildId: interaction.guild.id } },
+                    { upsert: true }
+                );
+
                 await updateSettingsMessage(interaction);
 
-                // Bearbeite die followUp-Nachricht, um dem User Feedback zu geben
-                await i.editReply({
-                    content: successMessage.replace('\${selectedChannelId}', selectedChannelId),
-                    components: []
-                });
+                if (successMessage && typeof successMessage === 'string') {
+                    await i.editReply({
+                        content: successMessage.replace('{channelId}', selectedChannelId),
+                        components: []
+                    });
+                } else {
+                    await i.editReply({ content: "Einstellung erfolgreich gesetzt!", components: [] });
+                }
             } catch (error) {
                 logger.error(`Fehler beim Setzen der Einstellung für ${dbKey}:`, error);
-                await i.editReply({ content: errorMessage, components: [] });
+                await i.editReply({content: errorMessage, components: []});
             }
         });
 
         collector.on('end', async (collected) => {
             if (collected.size === 0) {
-                // Bearbeite die followUp-Nachricht, um sie zu deaktivieren
-                await interaction.editReply({ content: "Die Zeit für die Auswahl ist abgelaufen.", components: [] }).catch(() => {});
+                await message.edit({ content: "Die Zeit für die Auswahl ist abgelaufen.", components: [] }).catch(() => {});
             }
         });
     }

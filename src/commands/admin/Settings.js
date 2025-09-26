@@ -5,12 +5,13 @@ const {
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
     ContainerBuilder,
-    MessageFlags,
     TextDisplayBuilder,
-    SeparatorBuilder
+    SeparatorBuilder,
+    MessageFlags
 } = require("discord.js");
 const Permissions = require("../../enums/Permissions");
 const ConfigService = require("../../services/ConfigService");
+const MessageService = require("../../services/MessageService");
 
 class Settings extends Command {
     constructor() {
@@ -26,33 +27,26 @@ class Settings extends Command {
     }
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({});
 
         const bot = interaction.guild.members.me;
-
         if (!bot.permissions.has(Permissions.Administrator)) {
             return interaction.editReply({
-                content: "Ich benötige Administrator Rechte, um diesen Befehl auszuführen",
-                ephemeral: true,
+                content: "Ich benötige Administrator Rechte, um diesen Befehl auszuführen."
             });
         }
 
-        const settingsConfig = await ConfigService.get("settings");
-
+        const settingsConfig = ConfigService.get("settings");
         if (!settingsConfig || !settingsConfig[0] || !settingsConfig[0].pages) {
             return interaction.editReply({
-                content: "Die Konfiguration für die Channels wurde nicht gefunden. Bitte setze die Konfiguration zuerst.",
-                ephemeral: true,
+                content: "Die Konfiguration für die Seiten wurde nicht gefunden."
             });
         }
 
         const pages = settingsConfig[0].pages;
-
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId("settings-select")
             .setPlaceholder("📜 | Wähle eine Kategorie")
-            .setMinValues(1)
-            .setMaxValues(1)
             .addOptions(
                 pages.map((page) =>
                     new StringSelectMenuOptionBuilder()
@@ -61,36 +55,34 @@ class Settings extends Command {
                         .setDescription(page.description)
                 )
             );
-
         const actionRow = new ActionRowBuilder().addComponents(selectMenu);
 
-        const title = new TextDisplayBuilder().setContent(
-            "# Bot Einstellungen"
-        );
+        const title = MessageService.get("settings.mainMenu.title");
+        const text = MessageService.get("settings.mainMenu.text");
 
-        const settingsContent = "test";
-        const text = new TextDisplayBuilder().setContent(settingsContent);
+        if (!title || !text) {
+            return interaction.editReply({ content: "Fehler: Die Nachrichtendatei 'settings.json' oder deren Inhalt konnte nicht geladen werden." });
+        }
 
+        const container = this.buildContainer(title, text);
+
+        await interaction.editReply({
+            flags: MessageFlags.IsComponentsV2,
+            components: [container, actionRow]
+        });
+    }
+
+    buildContainer(titleContent, textContent) {
+        const title = new TextDisplayBuilder().setContent(titleContent);
+        const text = new TextDisplayBuilder().setContent(textContent);
         const separator = new SeparatorBuilder();
-
         const spacer = new TextDisplayBuilder().setContent('\u200B');
 
-        const container = new ContainerBuilder()
+        return new ContainerBuilder()
             .addTextDisplayComponents(title)
             .addSeparatorComponents(separator)
             .addTextDisplayComponents(spacer)
             .addTextDisplayComponents(text);
-
-
-        await interaction.channel.send({
-            flags: MessageFlags.IsComponentsV2,
-            components: [container, actionRow],
-        });
-
-        return interaction.editReply({
-            content: "Einstellungen wurden gesendet",
-            ephemeral: true,
-        });
     }
 }
 

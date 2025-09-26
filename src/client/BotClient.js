@@ -5,6 +5,7 @@ const logger = require("../utils/logger");
 const { TOKEN, CLIENT_ID } = require('../../config.json');
 const ModalService = require("../services/ModalService");
 const ConfigService = require("../services/ConfigService");
+const MessageService = require("../services/MessageService");
 
 class BotClient extends Client {
     constructor() {
@@ -109,6 +110,7 @@ class BotClient extends Client {
     async start(token) {
         logger.info(`💾  ${ModalService.getModelCount()} Modals geladen`);
         logger.info(`⚙️  ${ConfigService.getConfigCount()} Konfigurationen geladen`);
+        logger.info(`💬  ${MessageService.getMessageCount()} Nachrichtendateien geladen`);
 
         await this.loadAndRegisterCommands();
         await this.loadEvents();
