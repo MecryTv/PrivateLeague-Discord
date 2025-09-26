@@ -52,8 +52,8 @@ class ConfigService {
         }
 
         for (const item of data) {
-            if (typeof item.pagination !== 'boolean') {
-                logger.error(`❌ In ${fileName} fehlt das 'pagination' Feld oder es ist kein Boolean.`);
+            if (typeof item.panigation !== 'boolean') {
+                logger.error(`❌ In ${fileName} fehlt das 'panigation' Feld oder es ist kein Boolean.`);
                 return false;
             }
         }
