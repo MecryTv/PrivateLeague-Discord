@@ -9,7 +9,7 @@ class ConfigService {
     }
 
     /**
-     * Lädt alle .json Konfigurationsdateien aus dem root /config Verzeichnis.
+     * Lädt und validiert alle .json Konfigurationsdateien aus dem /config Verzeichnis.
      * @private
      */
     _loadConfigs() {
@@ -27,14 +27,38 @@ class ConfigService {
                 const filePath = path.join(configPath, file);
                 const fileContent = fs.readFileSync(filePath, 'utf-8');
                 const configData = JSON.parse(fileContent);
-
                 const configName = path.basename(file, '.json');
 
-                this.configs.set(configName, configData);
+                if (this._validateConfig(configData, file)) {
+                    this.configs.set(configName, configData);
+                }
             } catch (error) {
                 logger.error(`❌ Fehler beim Laden der Konfigurationsdatei ${file}:`, error);
             }
         }
+    }
+
+    /**
+     * Validiert die Struktur der Konfigurationsdaten.
+     * @param {any} data - Die zu validierenden Konfigurationsdaten.
+     * @param {string} fileName - Der Name der Konfigurationsdatei für das Logging.
+     * @returns {boolean} - True, wenn die Konfiguration gültig ist, ansonsten false.
+     * @private
+     */
+    _validateConfig(data, fileName) {
+        if (!Array.isArray(data)) {
+            logger.error(`❌ Die Konfiguration in ${fileName} ist kein Array.`);
+            return false;
+        }
+
+        for (const item of data) {
+            if (typeof item.pagination !== 'boolean') {
+                logger.error(`❌ In ${fileName} fehlt das 'pagination' Feld oder es ist kein Boolean.`);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
