@@ -11,7 +11,6 @@ function generateSettingsText(dbSettings, channelConfig) {
         return "Keine Kanäle in der Konfiguration gefunden.";
     }
 
-    // KORREKTUR: Filtere den "Hauptmenü"-Eintrag aus der Anzeige heraus
     const displayableChannels = channelConfig.filter(channel => channel.value !== "main");
 
     const channelMappings = {
@@ -22,7 +21,6 @@ function generateSettingsText(dbSettings, channelConfig) {
         supportChannelId: { icon: "💬", label: "Support" }
     };
 
-    // Verwende die gefilterte Liste
     const settingsLines = displayableChannels.map(channel => {
         const channelId = currentSettings[channel.value];
         const mapping = channelMappings[channel.value];

@@ -16,12 +16,10 @@ const generateSettingsText = require("./generateSettingsText");
  */
 async function updateSettingsMessage(interaction) {
     try {
-        // 1. Lade die neuesten Daten aus der DB und der Konfiguration
         const newDbSettings = await ModalService.findOne("settings");
         const settingsConfig = ConfigService.get("settings")[0];
         const channelConfig = settingsConfig.channel;
 
-        // 2. Erstelle den Anzeigebereich mit den aktualisierten Informationen
         const title = new TextDisplayBuilder().setContent("# Channel Einstellungen");
         const settingsContent = generateSettingsText(newDbSettings, channelConfig);
         const text = new TextDisplayBuilder().setContent(settingsContent);
@@ -34,8 +32,6 @@ async function updateSettingsMessage(interaction) {
             .addTextDisplayComponents(spacer)
             .addTextDisplayComponents(text);
 
-        // 3. KORREKTUR: Erstelle das Channel-Auswahlmenü erneut
-        // Anstatt zum Hauptmenü zurückzukehren, bleiben wir auf der Channel-Ebene.
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId("channel-select") // Die ID des Channel-Menüs
             .setPlaceholder("📁 | Wähle einen Kanal")
@@ -49,7 +45,6 @@ async function updateSettingsMessage(interaction) {
             );
         const actionRow = new ActionRowBuilder().addComponents(selectMenu);
 
-        // 4. Bearbeite die ursprüngliche Nachricht mit dem aktualisierten Inhalt und dem Menü
         await interaction.message.edit({
             components: [container, actionRow]
         });
