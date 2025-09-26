@@ -1,13 +1,18 @@
-const ConfigService = require("../../services/ConfigService");
-
 /**
  * Erzeugt den formatierten Anzeigetext für die Bot-Einstellungen.
- * @param {object | null} settings - Das Einstellungs-Dokument aus der Datenbank.
+ * @param {object | null} dbSettings - Das Einstellungs-Dokument aus der Datenbank.
+ * @param {Array<object>} channelConfig - Das spezifische Konfigurationsarray für die Channels aus der JSON.
  * @returns {string} Der formatierte String für die Anzeige in Discord.
  */
-function generateSettingsText(settings) {
-    const currentSettings = settings || {};
-    const channelConfig = ConfigService.get("channels") || [];
+function generateSettingsText(dbSettings, channelConfig) {
+    const currentSettings = dbSettings || {};
+
+    if (!channelConfig || channelConfig.length === 0) {
+        return "Keine Kanäle in der Konfiguration gefunden.";
+    }
+
+    // KORREKTUR: Filtere den "Hauptmenü"-Eintrag aus der Anzeige heraus
+    const displayableChannels = channelConfig.filter(channel => channel.value !== "main");
 
     const channelMappings = {
         welcomeChannelId: { icon: "🎉", label: "Willkommens" },
@@ -17,7 +22,8 @@ function generateSettingsText(settings) {
         supportChannelId: { icon: "💬", label: "Support" }
     };
 
-    const settingsLines = channelConfig.map(channel => {
+    // Verwende die gefilterte Liste
+    const settingsLines = displayableChannels.map(channel => {
         const channelId = currentSettings[channel.value];
         const mapping = channelMappings[channel.value];
 
@@ -30,12 +36,14 @@ function generateSettingsText(settings) {
         return `${statusIcon} ${mapping.icon} **${mapping.label} Channel:** ${channelDisplay}`;
     }).filter(Boolean);
 
-    const separator = "───────────────────────────────";
+    if (settingsLines.length === 0) {
+        return "Keine gültigen Kanäle zum Anzeigen gefunden.";
+    }
 
+    const separator = "───────────────────────────────";
     const configuredCount = settingsLines.filter(line => line.includes("✅")).length;
     const totalCount = settingsLines.length;
     const completionPercentage = totalCount > 0 ? Math.round((configuredCount / totalCount) * 100) : 0;
-
     const statusBar = generateStatusBar(completionPercentage);
     const statusText = `\n**Konfiguration:** ${configuredCount}/${totalCount} (${completionPercentage}%)`;
 

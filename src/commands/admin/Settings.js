@@ -9,10 +9,8 @@ const {
     TextDisplayBuilder,
     SeparatorBuilder
 } = require("discord.js");
-const ModalService = require("../../services/ModalService");
 const Permissions = require("../../enums/Permissions");
 const ConfigService = require("../../services/ConfigService");
-const generateSettingsText = require("../../utils/settings/generateSettingsText");
 
 class Settings extends Command {
     constructor() {
@@ -39,28 +37,28 @@ class Settings extends Command {
             });
         }
 
-        const channelConfig = await ConfigService.get("channels");
+        const settingsConfig = await ConfigService.get("settings");
 
-        if (!channelConfig) {
+        if (!settingsConfig || !settingsConfig[0] || !settingsConfig[0].pages) {
             return interaction.editReply({
                 content: "Die Konfiguration für die Channels wurde nicht gefunden. Bitte setze die Konfiguration zuerst.",
                 ephemeral: true,
             });
         }
 
-        const settings = await ModalService.findOne("settings");
+        const pages = settingsConfig[0].pages;
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId("settings-select")
-            .setPlaceholder("📜 | Einstellung")
+            .setPlaceholder("📜 | Wähle eine Kategorie")
             .setMinValues(1)
             .setMaxValues(1)
             .addOptions(
-                channelConfig.map((channel) =>
+                pages.map((page) =>
                     new StringSelectMenuOptionBuilder()
-                        .setLabel(channel.name)
-                        .setValue(channel.value)
-                        .setDescription(channel.description)
+                        .setLabel(page.name)
+                        .setValue(page.value)
+                        .setDescription(page.description)
                 )
             );
 
@@ -70,7 +68,7 @@ class Settings extends Command {
             "# Bot Einstellungen"
         );
 
-        const settingsContent = generateSettingsText(settings);
+        const settingsContent = "test";
         const text = new TextDisplayBuilder().setContent(settingsContent);
 
         const separator = new SeparatorBuilder();
