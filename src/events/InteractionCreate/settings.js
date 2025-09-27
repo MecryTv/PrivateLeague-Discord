@@ -135,7 +135,7 @@ class Settings extends Event {
             }
 
             let channelType = ChannelTypes.Text;
-            let placeholder = config.channel.channelMenu.menuPlaceholder;
+            let placeholder = MessageService.get("settings.channelMenu.menuPlaceholder");
             if (["ticketsChannelId", "logChannelId", "applicationChannelId"].includes(selectedOption)) {
                 channelType = ChannelTypes.Forum;
                 placeholder = "Forum auswählen";
