@@ -10,6 +10,7 @@ class EmojiService {
 
     /**
      * Lädt und verarbeitet die emojis.json rekursiv.
+     * Ignoriert das äußere Array und den "panigation"-Key.
      * @private
      */
     _loadEmojis() {
@@ -21,7 +22,12 @@ class EmojiService {
 
         try {
             const fileContent = fs.readFileSync(emojisPath, 'utf-8');
-            const emojiData = JSON.parse(fileContent);
+            let emojiData = JSON.parse(fileContent);
+
+            if (Array.isArray(emojiData) && emojiData.length > 0) {
+                emojiData = emojiData[0];
+            }
+
             this._flattenEmojis(emojiData);
         } catch (error) {
             logger.error(`❌ Fehler beim Laden der Emoji-Datei:`, error);
@@ -36,7 +42,7 @@ class EmojiService {
      */
     _flattenEmojis(obj, prefix = '') {
         for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
+            if (obj.hasOwnProperty(key) && key !== 'panigation') {
                 const newPrefix = prefix ? `${prefix}.${key}` : key;
                 if (typeof obj[key] === 'object' && obj[key] !== null) {
                     this._flattenEmojis(obj[key], newPrefix);
