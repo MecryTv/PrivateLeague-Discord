@@ -7,11 +7,13 @@ const {
     ContainerBuilder,
     TextDisplayBuilder,
     SeparatorBuilder,
-    MessageFlags
+    MessageFlags,
+    MediaGalleryBuilder
 } = require("discord.js");
 const Permissions = require("../../enums/Permissions");
 const ConfigService = require("../../services/ConfigService");
 const MessageService = require("../../services/MessageService");
+const MediaService = require("../../services/MediaService");
 
 class Settings extends Command {
     constructor() {
@@ -28,6 +30,9 @@ class Settings extends Command {
 
     async execute(interaction) {
         await interaction.deferReply({});
+
+        const einstellungAttachment = MediaService.getAttachment('Einstellung.png');
+        const einstellungUrl = MediaService.getAttachmentURL('Einstellung.png');
 
         const bot = interaction.guild.members.me;
         if (!bot.permissions.has(Permissions.Administrator)) {
@@ -64,25 +69,37 @@ class Settings extends Command {
             return interaction.editReply({ content: "Fehler: Die Nachrichtendatei 'settings.json' oder deren Inhalt konnte nicht geladen werden." });
         }
 
-        const container = this.buildContainer(title, text);
+        const container = this.buildContainer(title, text, einstellungUrl);
 
         await interaction.editReply({
             flags: MessageFlags.IsComponentsV2,
-            components: [container, actionRow]
+            components: [container, actionRow],
+            files: [einstellungAttachment]
         });
     }
 
-    buildContainer(titleContent, textContent) {
+    buildContainer(titleContent, textContent, einstellungUrl) {
         const title = new TextDisplayBuilder().setContent(titleContent);
         const text = new TextDisplayBuilder().setContent(textContent);
-        const separator = new SeparatorBuilder();
+        const separator1 = new SeparatorBuilder();
+        const separator2 = new SeparatorBuilder();
         const spacer = new TextDisplayBuilder().setContent('\u200B');
+        const image = new MediaGalleryBuilder()
+            .addItems([
+                {
+                    media: {
+                        url: einstellungUrl,
+                    }
+                }
+            ]);
 
         return new ContainerBuilder()
             .addTextDisplayComponents(title)
-            .addSeparatorComponents(separator)
+            .addSeparatorComponents(separator1)
             .addTextDisplayComponents(spacer)
-            .addTextDisplayComponents(text);
+            .addTextDisplayComponents(text)
+            .addSeparatorComponents(separator2)
+            .addMediaGalleryComponents(image);
     }
 }
 

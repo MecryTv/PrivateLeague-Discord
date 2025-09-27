@@ -105,7 +105,6 @@ async function handleRoleSelection(interaction, {
             await updateRoleText(interaction);
 
             if (successMessage && typeof successMessage === 'string') {
-                // KORREKTUR: Ersetze {roleId} statt {channelId}
                 await i.editReply({
                     content: successMessage.replace('{roleId}', selectedRoleId),
                     components: []

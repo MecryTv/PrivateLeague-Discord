@@ -4,12 +4,13 @@ const {
     StringSelectMenuOptionBuilder,
     ContainerBuilder,
     TextDisplayBuilder,
-    SeparatorBuilder
+    SeparatorBuilder, MediaGalleryBuilder
 } = require("discord.js");
 const ModalService = require("../../services/ModalService");
 const ConfigService = require("../../services/ConfigService");
 const generateChannelText = require("./generateChannelText");
 const logger = require("../../utils/logger");
+const MediaService = require("../../services/MediaService");
 
 /**
  * Aktualisiert die Einstellungsnachricht und zeigt weiterhin das Channel-Menü an.
@@ -21,17 +22,31 @@ async function updateChannelText(interaction) {
         const settingsConfig = ConfigService.get("settings")[0];
         const channelConfig = settingsConfig.channel;
 
+        const channelAttachment = MediaService.getAttachment('ChannelEIN.png');
+        const channelURL = MediaService.getAttachmentURL('ChannelEIN.png');
+
         const title = new TextDisplayBuilder().setContent("# Channel Einstellungen");
         const settingsContent = generateChannelText(newDbSettings, channelConfig);
         const text = new TextDisplayBuilder().setContent(settingsContent);
-        const separator = new SeparatorBuilder();
+        const separator1 = new SeparatorBuilder();
+        const separator2 = new SeparatorBuilder();
         const spacer = new TextDisplayBuilder().setContent('\u200B');
+        const image = new MediaGalleryBuilder()
+            .addItems([
+                {
+                    media: {
+                        url: channelURL,
+                    }
+                }
+            ]);
 
         const container = new ContainerBuilder()
             .addTextDisplayComponents(title)
-            .addSeparatorComponents(separator)
+            .addSeparatorComponents(separator1)
             .addTextDisplayComponents(spacer)
-            .addTextDisplayComponents(text);
+            .addTextDisplayComponents(text)
+            .addSeparatorComponents(separator2)
+            .addMediaGalleryComponents(image);
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId("channel-select")
@@ -47,7 +62,8 @@ async function updateChannelText(interaction) {
         const actionRow = new ActionRowBuilder().addComponents(selectMenu);
 
         await interaction.message.edit({
-            components: [container, actionRow]
+            components: [container, actionRow],
+            files: [channelAttachment]
         });
 
     } catch (error) {

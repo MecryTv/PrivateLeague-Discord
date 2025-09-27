@@ -3,17 +3,17 @@ const {
     ActionRowBuilder,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder,
-    ChannelSelectMenuBuilder,
-    RoleSelectMenuBuilder,
     ContainerBuilder,
     TextDisplayBuilder,
-    SeparatorBuilder
+    SeparatorBuilder,
+    MediaGalleryBuilder
 } = require("discord.js");
 const logger = require("../../utils/logger");
 const MessageService = require("../../services/MessageService");
 const ConfigService = require("../../services/ConfigService");
 const ChannelTypes = require("../../enums/ChannelTypes");
 const ModalService = require("../../services/ModalService");
+const MediaService = require("../../services/MediaService");
 const generateChannelText = require("../../utils/settings/generateChannelText");
 const generateRoleText = require("../../utils/settings/generateRoleText");
 const { handleChannelSelection, handleRoleSelection } = require("../../utils/settings/handleSelections");
@@ -43,6 +43,9 @@ class Settings extends Event {
                 const channelConfig = config.channel;
                 const menuMessages = MessageService.get("settings.channelMenu");
 
+                const channelAttachment = MediaService.getAttachment('ChannelEIN.png');
+                const channelURL = MediaService.getAttachmentURL('ChannelEIN.png');
+
                 const selectMenu = new StringSelectMenuBuilder()
                     .setCustomId("channel-select")
                     .setPlaceholder(menuMessages.menuPlaceholder)
@@ -59,15 +62,20 @@ class Settings extends Event {
                 const settingsData = await ModalService.findOne("settings", { guildId: interaction.guild.id });
                 const container = this.buildContainer(
                     menuMessages.title,
-                    generateChannelText(settingsData, channelConfig)
+                    generateChannelText(settingsData, channelConfig),
+                    channelURL
                 )
 
                 await interaction.editReply({
-                    components: [container, actionRow]
+                    components: [container, actionRow],
+                    files: [channelAttachment],
                 });
             } else if (selectedOption === "role") {
                 const roleConfig = config.roles;
                 const menuMessages = MessageService.get("settings.roleMenu");
+
+                const roleAttachment = MediaService.getAttachment('RollenEIN.png');
+                const roleURL = MediaService.getAttachmentURL('RollenEIN.png');
 
                 const selectMenu = new StringSelectMenuBuilder()
                     .setCustomId("role-select")
@@ -85,11 +93,13 @@ class Settings extends Event {
                 const settingsData = await ModalService.findOne("settings", { guildId: interaction.guild.id });
                 const container = this.buildContainer(
                     menuMessages.title,
-                    generateRoleText(settingsData, roleConfig)
+                    generateRoleText(settingsData, roleConfig),
+                    roleURL
                 );
 
                 await interaction.editReply({
-                    components: [container, actionRow]
+                    components: [container, actionRow],
+                    files: [roleAttachment],
                 });
             }
         } else if (interaction.customId === "channel-select") {
@@ -101,6 +111,9 @@ class Settings extends Event {
 
                 const title = MessageService.get("settings.mainMenu.title");
                 const text = MessageService.get("settings.mainMenu.text");
+                
+                const settingsAttachment = MediaService.getAttachment('Einstellung.png');
+                const settingsURL = MediaService.getAttachmentURL('Einstellung.png');
 
                 if (!title || !text) {
                     return interaction.followUp({
@@ -122,10 +135,11 @@ class Settings extends Event {
                     );
                 const actionRow = new ActionRowBuilder().addComponents(mainMenu);
 
-                const container = this.buildContainer(title, text);
+                const container = this.buildContainer(title, text, settingsURL);
 
                 await interaction.editReply({
-                    components: [container, actionRow]
+                    components: [container, actionRow],
+                    files: [settingsAttachment]
                 });
                 return;
             }
@@ -160,6 +174,9 @@ class Settings extends Event {
                 const title = MessageService.get("settings.mainMenu.title");
                 const text = MessageService.get("settings.mainMenu.text");
 
+                const settingsAttachment = MediaService.getAttachment('Einstellung.png');
+                const settingsURL = MediaService.getAttachmentURL('Einstellung.png');
+
                 if (!title || !text) {
                     return interaction.followUp({
                         content: "Fehler: Hauptmenü-Texte konnten nicht geladen werden.",
@@ -180,10 +197,11 @@ class Settings extends Event {
                     );
                 const actionRow = new ActionRowBuilder().addComponents(mainMenu);
 
-                const container = this.buildContainer(title, text);
+                const container = this.buildContainer(title, text, settingsURL);
 
                 await interaction.editReply({
-                    components: [container, actionRow]
+                    components: [container, actionRow],
+                    files: [settingsAttachment]
                 });
                 return;
             }
@@ -205,17 +223,28 @@ class Settings extends Event {
         }
     }
 
-    buildContainer(titleContent, textContent) {
+    buildContainer(titleContent, textContent, imageURL) {
         const title = new TextDisplayBuilder().setContent(titleContent);
         const text = new TextDisplayBuilder().setContent(textContent);
-        const separator = new SeparatorBuilder();
+        const separator1 = new SeparatorBuilder();
+        const separator2 = new SeparatorBuilder();
         const spacer = new TextDisplayBuilder().setContent('\u200B');
+        const image = new MediaGalleryBuilder()
+            .addItems([
+                {
+                    media: {
+                        url: imageURL,
+                    }
+                }
+            ]);
 
         return new ContainerBuilder()
             .addTextDisplayComponents(title)
-            .addSeparatorComponents(separator)
+            .addSeparatorComponents(separator1)
             .addTextDisplayComponents(spacer)
-            .addTextDisplayComponents(text);
+            .addTextDisplayComponents(text)
+            .addSeparatorComponents(separator2)
+            .addMediaGalleryComponents(image);
     }
 }
 
