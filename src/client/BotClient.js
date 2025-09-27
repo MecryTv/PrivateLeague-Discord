@@ -7,6 +7,7 @@ const ModalService = require("../services/ModalService");
 const ConfigService = require("../services/ConfigService");
 const MessageService = require("../services/MessageService");
 const MediaService = require("../services/MediaService");
+const EmojiService = require("../services/EmojiService");
 
 class BotClient extends Client {
     constructor() {
@@ -116,6 +117,7 @@ class BotClient extends Client {
         logger.info(`⚙️  ${ConfigService.getConfigCount()} Konfigurationen geladen`);
         logger.info(`💬  ${MessageService.getMessageCount()} Nachrichtendateien geladen`);
         logger.info(`🖼️ ${MediaService.getMediaCount()} Mediendateien geladen`);
+        logger.info(`😃  ${EmojiService.getEmojiCount()} Emojis geladen`);
 
         await this.login(token);
     }
