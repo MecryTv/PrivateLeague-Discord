@@ -186,6 +186,19 @@ class Guardian {
     }
 
     /**
+     * @param {string} errorMessage - Eine klare, für Entwickler verständliche Fehlermeldung.
+     * @param {string} type - Ein benutzerdefinierter Typ für den Fehler (z.B. "Service Initialization").
+     * @param {string} [stack] - **Optional:** Der `error.stack` des ursprünglichen Fehlers.
+     */
+    async handleGeneric(errorMessage, type = 'Generic System Error', stack = null) {
+        const error = new Error(errorMessage);
+        if (stack) {
+            error.stack = stack;
+        }
+        await this.report(error, null, type);
+    }
+
+    /**
      * Hauptmethode zur Behandlung eines Fehlers.
      * @param {Error} error - Das aufgetretene Fehlerobjekt.
      * @param {import('discord.js').Interaction | null} interaction - Die Interaktion, bei der der Fehler auftrat.
