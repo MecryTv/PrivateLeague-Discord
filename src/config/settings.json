@@ -23,6 +23,11 @@
         "name": "Support Ping",
         "description": "Rolle für Support Pings",
         "value": "supportPingRoleId"
+      },
+      {
+        "name": "Developer Ping",
+        "description": "Rolle für Developer Pings",
+        "value": "developerPingRoleId"
       }
     ],
     "channel": [
@@ -55,6 +60,11 @@
         "name": "Support Channel",
         "description": "Channel für Supportinfos (z.b. Reports)",
         "value": "supportChannelId"
+      },
+      {
+        "name": "Error Log Channel",
+        "description": "Channel für Guardian Fehlerberichte",
+        "value": "errorLogChannelId"
       }
     ]
   }
