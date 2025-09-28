@@ -8,6 +8,7 @@ const ConfigService = require("../services/ConfigService");
 const MessageService = require("../services/MessageService");
 const MediaService = require("../services/MediaService");
 const EmojiService = require("../services/EmojiService");
+const Guardian = require("../services/Guardian");
 
 class BotClient extends Client {
     constructor() {
@@ -110,6 +111,9 @@ class BotClient extends Client {
     }
 
     async start(token) {
+        logger.mtvBanner();
+        Guardian.initialize(this);
+
         await this.loadAndRegisterCommands();
         await this.loadEvents();
 
