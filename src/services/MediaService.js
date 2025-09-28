@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { AttachmentBuilder } = require('discord.js');
-const logger = require('../utils/logger');
+const Guardian = require('../services/Guardian');
 
 class MediaService {
     constructor() {
@@ -9,78 +9,57 @@ class MediaService {
         this._loadMedia();
     }
 
-    /**
-     * Durchsucht rekursiv das Medienverzeichnis und lädt alle gefundenen Dateien.
-     * @param {string} dirPath - Der Pfad zum Verzeichnis, das durchsucht werden soll.
-     * @private
-     */
     _loadMediaRecursive(dirPath) {
-        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-        const mediaPath = path.join(__dirname, '..', 'images');
+        try {
+            const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+            const mediaPath = path.join(__dirname, '..', 'images');
 
-        for (const entry of entries) {
-            const fullPath = path.join(dirPath, entry.name);
-            if (entry.isDirectory()) {
-                this._loadMediaRecursive(fullPath);
-            } else {
-                try {
+            for (const entry of entries) {
+                const fullPath = path.join(dirPath, entry.name);
+                if (entry.isDirectory()) {
+                    this._loadMediaRecursive(fullPath);
+                } else {
                     const key = path.relative(mediaPath, fullPath).replace(/\\/g, '/');
                     this.media.set(key, fullPath);
-                } catch (error) {
-                    logger.error(`❌ Fehler beim Laden der Mediendatei ${entry.name}:`, error);
                 }
             }
+        } catch (error) {
+            Guardian.handleGeneric(`Fehler beim rekursiven Laden von Medien im Pfad ${dirPath}.`, 'MediaService Load', error.stack);
         }
     }
 
-    /**
-     * Startet den Ladevorgang für alle Medien.
-     * @private
-     */
     _loadMedia() {
         const mediaPath = path.join(__dirname, '..', 'images');
         if (!fs.existsSync(mediaPath)) {
-            logger.warn(`Das Medienverzeichnis (${mediaPath}) existiert nicht. Es werden keine Medien geladen.`);
-            return;
+            return Guardian.handleGeneric(`Das Medienverzeichnis (${mediaPath}) existiert nicht.`, 'MediaService Init');
         }
         this._loadMediaRecursive(mediaPath);
     }
 
-    /**
-     * Ruft den vollständigen Pfad zu einer Mediendatei ab.
-     * @param {string} key - Der Key der Datei (z.B. 'PLLogo.png' oder 'banner/PLBanner.png').
-     * @returns {string | null} Den vollständigen Dateipfad oder null, wenn nicht gefunden.
-     */
     get(key) {
         if (!this.media.has(key)) {
-            logger.warn(`Die Mediendatei mit dem Key '${key}' wurde nicht gefunden.`);
+            Guardian.handleGeneric(`Die Mediendatei mit dem Key '${key}' wurde nicht gefunden.`, 'MediaService Get');
             return null;
         }
         return this.media.get(key);
     }
 
-    /**
-     * Erstellt einen AttachmentBuilder für eine Mediendatei.
-     * @param {string} key - Der Key der Datei (z.B. 'unterordner/bild.png').
-     * @param {object} options - Zusätzliche Optionen für den AttachmentBuilder.
-     * @returns {AttachmentBuilder | null}
-     */
     getAttachment(key, options = {}) {
         const filePath = this.get(key);
         if (!filePath) {
             return null;
         }
-        return new AttachmentBuilder(filePath, { name: path.basename(key), ...options });
+        try {
+            return new AttachmentBuilder(filePath, { name: path.basename(key), ...options });
+        } catch(error) {
+            Guardian.handleGeneric(`Fehler beim Erstellen des Attachments für '${key}'.`, 'MediaService Attachment', error.stack);
+            return null;
+        }
     }
 
-    /**
-     * Gibt den formatierten String für die Verwendung in .setURL() zurück.
-     * @param {string} key - Der Key der Datei (z.B. 'unterordner/bild.png').
-     * @returns {string | null} Den String 'attachment://<Dateiname>' oder null, wenn nicht gefunden.
-     */
     getAttachmentURL(key) {
         if (!this.media.has(key)) {
-            logger.warn(`Die Mediendatei mit dem Key '${key}' für die URL konnte nicht gefunden werden.`);
+            Guardian.handleGeneric(`Die Mediendatei mit dem Key '${key}' für eine URL wurde nicht gefunden.`, 'MediaService GetURL');
             return null;
         }
         const fileName = path.basename(key);

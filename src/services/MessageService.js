@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const logger = require('../utils/logger');
+const Guardian = require('../services/Guardian');
 
 class MessageService {
     constructor() {
@@ -11,9 +11,9 @@ class MessageService {
     _loadMessages() {
         const messagesPath = path.join(__dirname, '..', 'messages');
         if (!fs.existsSync(messagesPath)) {
-            logger.warn(`Das Nachrichtenverzeichnis (${messagesPath}) existiert nicht.`);
-            return;
+            return Guardian.handleGeneric(`Das Nachrichtenverzeichnis (${messagesPath}) existiert nicht.`, 'MessageService Init');
         }
+
         const messageFiles = fs.readdirSync(messagesPath).filter(file => file.endsWith('.json'));
         for (const file of messageFiles) {
             try {
@@ -23,7 +23,7 @@ class MessageService {
                 const messageName = path.basename(file, '.json');
                 this.messages.set(messageName, messageData);
             } catch (error) {
-                logger.error(`❌ Fehler beim Laden der Nachrichtendatei ${file}:`, error);
+                Guardian.handleGeneric(`Fehler beim Laden der Nachrichtendatei ${file}.`, 'MessageService Load', error.stack);
             }
         }
     }
@@ -33,16 +33,16 @@ class MessageService {
         let message = this.messages.get(fileName);
 
         if (!message) {
-            logger.warn(`Nachrichtendatei mit dem Key '${fileName}' wurde nicht gefunden.`);
-            return null;
+            Guardian.handleGeneric(`Nachrichtendatei mit dem Key '${fileName}' wurde nicht gefunden.`, 'MessageService Get');
+            return `[Fehler: Nachrichtendatei '${fileName}' nicht gefunden]`;
         }
 
         for (const part of path) {
             if (message && typeof message === 'object' && part in message) {
                 message = message[part];
             } else {
-                logger.warn(`Nachrichtenschlüssel '${key}' wurde nicht gefunden.`);
-                return null;
+                Guardian.handleGeneric(`Nachrichtenschlüssel '${key}' wurde nicht gefunden.`, 'MessageService Get');
+                return `[Fehler: Schlüssel '${key}' nicht gefunden]`;
             }
         }
 

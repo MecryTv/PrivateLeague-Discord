@@ -3,6 +3,7 @@ const ModalService = require("../../services/ModalService");
 const updateChannelText = require("./updateChannelText");
 const logger = require("../logger");
 const updateRoleText = require("./updateRoleText");
+const Guardian = require("../../services/Guardian");
 
 async function handleChannelSelection(interaction, {
     customId,
@@ -54,7 +55,7 @@ async function handleChannelSelection(interaction, {
                 await i.editReply({content: "Einstellung erfolgreich gesetzt!", components: []});
             }
         } catch (error) {
-            logger.error(`Fehler beim Setzen der Einstellung für ${dbKey}:`, error);
+            await Guardian.handleGeneric(`Fehler beim Setzen der Einstellung für ${dbKey}:`, "Einstellung setzen", error.stack);
             await i.editReply({content: errorMessage, components: []});
         }
     });
@@ -113,7 +114,7 @@ async function handleRoleSelection(interaction, {
                 await i.editReply({content: "Einstellung erfolgreich gesetzt!", components: []});
             }
         } catch (error) {
-            logger.error(`Fehler beim Setzen der Einstellung für ${dbKey}:`, error);
+            await Guardian.handleGeneric(`Fehler beim Setzen der Einstellung für ${dbKey}:`, "Einstellung setzen", error.stack);
             await i.editReply({content: errorMessage, components: []});
         }
     });

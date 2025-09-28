@@ -10,6 +10,7 @@ const { SlashCommandBuilder,
 } = require("discord.js");
 const ModalService = require("../../services/ModalService");
 const MediaService = require("../../services/MediaService");
+const Guardian = require("../../services/Guardian");
 
 class Report extends Command {
   constructor() {
@@ -52,6 +53,10 @@ class Report extends Command {
 
             const reportAttachment = await MediaService.getAttachment("mod/Report.png");
             const reportURL = await MediaService.getAttachmentURL("mod/Report.png");
+
+            if (!reportAttachment || !reportURL) {
+                return await Guardian.handleCommand("Die Report-Bilddatei 'mod/Report.png' konnte im MediaService nicht gefunden werden.", interaction)
+            }
 
             const thumbnail = new ThumbnailBuilder()
                 .setURL(user.displayAvatarURL({ dynamic: true}));

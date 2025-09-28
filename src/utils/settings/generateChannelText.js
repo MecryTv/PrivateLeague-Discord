@@ -20,7 +20,8 @@ function generateChannelText(dbSettings, channelConfig) {
         ticketsChannelId: { icon: "🎫", label: "Tickets" },
         logChannelId: { icon: "📋", label: "Log" },
         applicationChannelId: { icon: "📄", label: "Bewerbungs" },
-        supportChannelId: { icon: "💬", label: "Support" }
+        supportChannelId: { icon: "💬", label: "Support" },
+        errorLogChannelId: { icon: "⚠️", label: "Fehler-Log" },
     };
 
     const settingsLines = displayableChannels.map(channel => {

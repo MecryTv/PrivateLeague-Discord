@@ -1,7 +1,6 @@
 const generateStatusBar = require('./generateStatusBar');
 
 /**
- * Erzeugt den formatierten Anzeigetext für die Bot-Einstellungen.
  * @param {object | null} dbSettings - Das Einstellungs-Dokument aus der Datenbank.
  * @param {Array<object>} roleConfig - Das spezifische Konfigurationsarray für die Channels aus der JSON.
  * @returns {string} Der formatierte String für die Anzeige in Discord.
@@ -17,6 +16,8 @@ function generateRoleText(dbSettings, roleConfig) {
 
     const roleMappings = {
         supportPingRoleId: { icon: "💬", label: "Support Ping" },
+        developerPingRoleId: { icon: "🛠️", label: "Developer Ping" },
+
     }
 
     const settingsLines = displayableRoles.map(role => {

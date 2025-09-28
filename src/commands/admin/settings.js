@@ -14,6 +14,7 @@ const Permissions = require("../../enums/Permissions");
 const ConfigService = require("../../services/ConfigService");
 const MessageService = require("../../services/MessageService");
 const MediaService = require("../../services/MediaService");
+const Guardian = require("../../services/Guardian");
 
 class Settings extends Command {
     constructor() {
@@ -36,6 +37,8 @@ class Settings extends Command {
 
         const bot = interaction.guild.members.me;
         if (!bot.permissions.has(Permissions.Administrator)) {
+            await Guardian.handleCommand("Der Bot benötigt Administrator Rechte, um den Settings-Befehl auszuführen.", interaction, "Fehlende Berechtigungen");
+
             return interaction.editReply({
                 content: "Ich benötige Administrator Rechte, um diesen Befehl auszuführen."
             });
@@ -43,6 +46,8 @@ class Settings extends Command {
 
         const settingsConfig = ConfigService.get("settings");
         if (!settingsConfig || !settingsConfig[0] || !settingsConfig[0].pages) {
+            await Guardian.handleCommand("Die Konfiguration für die Seiten wurde nicht gefunden.", interaction, "Konfigurationsfehler");
+
             return interaction.editReply({
                 content: "Die Konfiguration für die Seiten wurde nicht gefunden."
             });
@@ -66,6 +71,7 @@ class Settings extends Command {
         const text = MessageService.get("settings.mainMenu.text");
 
         if (!title || !text) {
+            await Guardian.handleCommand("Die Nachrichtendatei 'settings.json' oder deren Inhalt konnte nicht geladen werden.", interaction, "Fehlende Nachrichten");
             return interaction.editReply({ content: "Fehler: Die Nachrichtendatei 'settings.json' oder deren Inhalt konnte nicht geladen werden." });
         }
 

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const logger = require('../utils/logger');
+const Guardian = require('../services/Guardian');
 
 class ConfigService {
     constructor() {
@@ -8,16 +8,11 @@ class ConfigService {
         this._loadConfigs();
     }
 
-    /**
-     * Lädt und validiert alle .json Konfigurationsdateien aus dem /config Verzeichnis.
-     * @private
-     */
     _loadConfigs() {
         const configPath = path.join(__dirname, '..', 'config');
 
         if (!fs.existsSync(configPath)) {
-            logger.warn(`Das Konfigurationsverzeichnis (${configPath}) existiert nicht. Es werden keine Konfigurationen geladen.`);
-            return;
+            return Guardian.handleGeneric(`Das Konfigurationsverzeichnis (${configPath}) existiert nicht.`, 'ConfigService Init');
         }
 
         const configFiles = fs.readdirSync(configPath).filter(file => file.endsWith('.json'));
@@ -33,27 +28,20 @@ class ConfigService {
                     this.configs.set(configName, configData);
                 }
             } catch (error) {
-                logger.error(`❌ Fehler beim Laden der Konfigurationsdatei ${file}:`, error);
+                Guardian.handleGeneric(`Fehler beim Laden der Konfigurationsdatei ${file}.`, 'ConfigService Load', error.stack);
             }
         }
     }
 
-    /**
-     * Validiert die Struktur der Konfigurationsdaten.
-     * @param {any} data - Die zu validierenden Konfigurationsdaten.
-     * @param {string} fileName - Der Name der Konfigurationsdatei für das Logging.
-     * @returns {boolean} - True, wenn die Konfiguration gültig ist, ansonsten false.
-     * @private
-     */
     _validateConfig(data, fileName) {
         if (!Array.isArray(data)) {
-            logger.error(`❌ Die Konfiguration in ${fileName} ist kein Array.`);
+            Guardian.handleGeneric(`Die Konfiguration in ${fileName} ist kein Array.`, 'ConfigService Validation');
             return false;
         }
 
         for (const item of data) {
-            if (typeof item.panigation !== 'boolean') {
-                logger.error(`❌ In ${fileName} fehlt das 'panigation' Feld oder es ist kein Boolean.`);
+            if (typeof item.pagination !== 'boolean' && typeof item.panigation !== 'boolean') {
+                Guardian.handleGeneric(`In ${fileName} fehlt das 'pagination' Feld oder es ist kein Boolean.`, 'ConfigService Validation');
                 return false;
             }
         }
@@ -61,23 +49,14 @@ class ConfigService {
         return true;
     }
 
-    /**
-     * Ruft eine geladene Konfiguration ab.
-     * @param {string} key - Der Name der Konfiguration (z.B. 'channels').
-     * @returns {any | null} Die Konfigurationsdaten oder null, wenn nicht gefunden.
-     */
     get(key) {
         if (!this.configs.has(key)) {
-            logger.warn(`Die Konfiguration mit dem Key '${key}' wurde nicht gefunden.`);
+            Guardian.handleGeneric(`Die Konfiguration mit dem Key '${key}' wurde nicht gefunden.`, 'ConfigService Get');
             return null;
         }
         return this.configs.get(key);
     }
 
-    /**
-     * Gibt die Anzahl der geladenen Konfigurationsdateien zurück.
-     * @returns {number}
-     */
     getConfigCount() {
         return this.configs.size;
     }

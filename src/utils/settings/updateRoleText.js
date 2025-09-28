@@ -8,10 +8,10 @@ const {
 } = require("discord.js");
 const ModalService = require("../../services/ModalService");
 const ConfigService = require("../../services/ConfigService");
-const MessageService = require("../../services/MessageService"); // Hinzufügen
+const MessageService = require("../../services/MessageService");
 const generateRoleText = require("./generateRoleText");
-const logger = require("../../utils/logger");
 const MediaService = require("../../services/MediaService");
+const Guardian = require("../../services/Guardian");
 
 /**
  * Aktualisiert die Einstellungsnachricht und zeigt weiterhin das Channel-Menü an.
@@ -68,7 +68,7 @@ async function updateRoleText(interaction) {
             files: [roleAttachment]
         });
     } catch (error) {
-        logger.error("Fehler beim Aktualisieren der Role Nachricht:", error);
+        await Guardian.handleGeneric(`Fehler beim Aktualierung der Rollen Einstellung`, "Update Role Text", error.stack);
     }
 }
 
