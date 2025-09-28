@@ -5,9 +5,11 @@ const { SlashCommandBuilder,
     SeparatorBuilder,
     ThumbnailBuilder,
     SectionBuilder,
-    MessageFlags
+    MessageFlags,
+    MediaGalleryBuilder
 } = require("discord.js");
 const ModalService = require("../../services/ModalService");
+const MediaService = require("../../services/MediaService");
 
 class Report extends Command {
   constructor() {
@@ -48,6 +50,9 @@ class Report extends Command {
             const supportChannel = await interaction.guild.channels.fetch(settings.supportChannelId);
             const supportRole = await interaction.guild.roles.fetch(settings.supportPingRoleId);
 
+            const reportAttachment = await MediaService.getAttachment("mod/Report.png");
+            const reportURL = await MediaService.getAttachmentURL("mod/Report.png");
+
             const thumbnail = new ThumbnailBuilder()
                 .setURL(user.displayAvatarURL({ dynamic: true}));
 
@@ -55,7 +60,8 @@ class Report extends Command {
                 `## Neuer Report von ${interaction.user}`
             );
 
-            const separator = new SeparatorBuilder();
+            const separator1 = new SeparatorBuilder();
+            const separator2 = new SeparatorBuilder();
 
             const text = new TextDisplayBuilder().setContent(
                 `**Gemeldeter User:** ${user} (${user.id})\n` +
@@ -63,14 +69,25 @@ class Report extends Command {
                 `**Reporter:** ${interaction.user} (${interaction.user.id})`
             );
 
+            const image = new MediaGalleryBuilder()
+                .addItems([
+                    {
+                        media: {
+                            url: reportURL,
+                        }
+                    }
+                ])
+
             const section = new SectionBuilder()
                 .setThumbnailAccessory(thumbnail)
                 .addTextDisplayComponents(text);
 
           const container = new ContainerBuilder()
                 .addTextDisplayComponents(title)
-                .addSeparatorComponents(separator)
-                .addSectionComponents(section);
+                .addSeparatorComponents(separator1)
+                .addSectionComponents(section)
+                .addSeparatorComponents(separator2)
+                .addMediaGalleryComponents(image);
 
           await supportChannel.send({
               content: `${supportRole}`,
@@ -79,6 +96,7 @@ class Report extends Command {
           await supportChannel.send({
               flags: [MessageFlags.IsComponentsV2],
               components: [container],
+              files: [reportAttachment],
           });
 
             return await interaction.reply({
