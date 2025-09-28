@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const logger = require("../utils/logger");
@@ -9,70 +8,52 @@ class ModalService {
         this._loadModels();
     }
 
-    /**
-     * Durchsucht rekursiv ein Verzeichnis und gibt alle Dateipfade zurück.
-     * @param {string} dir - Das zu durchsuchende Verzeichnis.
-     * @returns {string[]} Ein Array mit allen gefundenen Dateipfaden.
-     * @private
-     */
     _getAllFiles(dir) {
-        const entries = fs.readdirSync(dir, { withFileTypes: true });
-        const files = entries.flatMap(entry => {
-            const res = path.resolve(dir, entry.name);
-            // Wenn es ein Verzeichnis ist, rufe die Funktion erneut auf (rekursiv).
-            // Ansonsten gib den Dateipfad zurück.
-            return entry.isDirectory() ? this._getAllFiles(res) : res;
-        });
-        return files;
+        try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            return entries.flatMap(entry => {
+                const res = path.resolve(dir, entry.name);
+                return entry.isDirectory() ? this._getAllFiles(res) : res;
+            });
+        } catch(error) {
+            logger.error(`[ModalService] Critical File System Error: Failed to read directory ${dir}.`, error);
+            return [];
+        }
     }
 
-
-    /**
-     * Lädt automatisch alle Mongoose-Modelle aus dem /src/modals Verzeichnis und dessen Unterverzeichnissen.
-     * @private
-     */
     _loadModels() {
         const modalsPath = path.join(__dirname, "..", "modals");
 
         if (!fs.existsSync(modalsPath)) {
-            logger.warn(`Das Verzeichnis für die Modals (${modalsPath}) existiert nicht. Es werden keine Modelle geladen.`);
+            logger.warn(`[ModalService] Warning: Modals directory not found at ${modalsPath}. No models loaded.`);
             return;
         }
 
-        // Nutze die neue rekursive Funktion, um alle JS-Dateien zu finden.
         const modalFiles = this._getAllFiles(modalsPath).filter(file => file.endsWith(".js"));
 
         for (const file of modalFiles) {
-            const model = require(file);
-            if (model && model.modelName) {
-                this.models.set(model.modelName.toLowerCase(), model);
+            try {
+                const model = require(file);
+                if (model && model.modelName) {
+                    this.models.set(model.modelName.toLowerCase(), model);
+                }
+            } catch(error) {
+                logger.error(`[ModalService] Critical Load Error: Failed to load model from ${file}.`, error);
             }
         }
     }
 
-    /**
-     * Gibt die Anzahl der erfolgreich geladenen Modelle zurück.
-     * @returns {number}
-     */
     getModelCount() {
         return this.models.size;
     }
 
-    /**
-     * Ruft ein geladenes Mongoose-Modell ab.
-     * @param {string} modelName - Der Name des Modells.
-     * @returns {mongoose.Model}
-     * @private
-     */
     _getModel(modelName) {
         const model = this.models.get(modelName.toLowerCase());
         if (!model) {
-            throw new Error(`Model "${modelName}" wurde nicht gefunden oder ist nicht geladen.`);
+            throw new Error(`Model "${modelName}" was not found or has not been loaded.`);
         }
         return model;
     }
-
-    // --- Die CRUD-Methoden (create, findOne, etc.) bleiben unverändert ---
 
     async create(modelName, data) {
         const Model = this._getModel(modelName);
