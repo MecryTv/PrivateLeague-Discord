@@ -214,6 +214,20 @@ class Logger {
     }
     console.log(JSON.stringify(obj, null, 2));
   }
+
+    guardian(type, message, ...args) {
+        let color = this.colors.cyan;
+        const upperType = type.toUpperCase();
+
+        if (upperType === "WARN") {
+            color = this.colors.yellow;
+        } else if (upperType === "ERROR") {
+            color = this.colors.red;
+        }
+
+        const formatted = this.formatMessage("GUARDIAN", `${upperType.padEnd(5)} | ${message}`, color);
+        console.log(formatted, ...args);
+    }
 }
 
 const logger = new Logger();
