@@ -41,7 +41,7 @@ class EmojiService {
         }
     }
 
-    get(key) {
+    getLocal(key) {
         const id = this.emojis.get(key);
         if (!id) {
             Guardian.handleGeneric(`Emoji mit dem Key '${key}' wurde nicht gefunden.`, 'EmojiService Get');
@@ -56,6 +56,27 @@ class EmojiService {
             id,
             animated: isAnimated,
             toString: () => (isAnimated ? `<a:${name}:${id}>` : `<:${name}:${id}>`),
+        };
+    }
+
+    getServer(interaction, key) {
+        if (!interaction || !interaction.guild) {
+            Guardian.handleGeneric('Interaction oder Guild war nicht verfügbar, um Server-Emoji zu suchen.', 'EmojiService GetServer');
+            return null;
+        }
+
+        const emoji = interaction.guild.emojis.cache.find(e => e.name === key);
+
+        if (!emoji) {
+            Guardian.handleGeneric(`Server-Emoji mit dem Namen '${key}' wurde nicht gefunden.`, 'EmojiService GetServer');
+            return null;
+        }
+
+        return {
+            name: emoji.name,
+            id: emoji.id,
+            animated: emoji.animated,
+            toString: () => emoji.toString(),
         };
     }
 
