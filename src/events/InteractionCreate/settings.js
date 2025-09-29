@@ -1,5 +1,3 @@
-// src/events/InteractionCreate/settings.js
-
 const Event = require("../../structures/Events");
 const {
     ActionRowBuilder,
