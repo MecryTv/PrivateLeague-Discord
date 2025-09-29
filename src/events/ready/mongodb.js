@@ -24,7 +24,7 @@ class Mongodb extends Event {
             );
         });
 
-        logger.info("✅ MongoDB Connected");
+        logger.info("✅  MongoDB Connected");
     }
 }
 
