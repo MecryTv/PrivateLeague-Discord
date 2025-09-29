@@ -9,6 +9,7 @@ const MessageService = require("../services/MessageService");
 const MediaService = require("../services/MediaService");
 const EmojiService = require("../services/EmojiService");
 const Guardian = require("../services/Guardian");
+const ModerationService = require("../services/ModerationService");
 
 class BotClient extends Client {
     constructor() {
@@ -34,6 +35,7 @@ class BotClient extends Client {
         });
 
         this.commands = new Collection();
+        this.moderationService = new ModerationService(this);
     }
 
     async loadAndRegisterCommands() {
