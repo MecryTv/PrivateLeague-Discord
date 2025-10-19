@@ -11,6 +11,7 @@ const Timeout = mongoose.model(
       duration: { type: Number },
       expiresAt: { type: Date },
       createdAt: { type: Date, default: Date.now },
+      active: { type: Boolean },
   })
 );
 

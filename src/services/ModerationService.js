@@ -23,6 +23,7 @@ class ModerationService {
     constructor(client) {
         this.client = client;
         this._startTempBanCheck();
+        this._startTimeoutCheck();
     }
 
     _startTempBanCheck() {
@@ -85,6 +86,66 @@ class ModerationService {
                     }
                 } finally {
                     await ModalService.updateOne("ban", {_id: ban._id}, {active: false});
+                }
+            }
+        }, 60000);
+    }
+
+    _startTimeoutCheck() {
+        setInterval(async () => {
+            const timeouts = await ModalService.find("timeout", {
+                active: true,
+                expiresAt: { $lte: new Date() }
+            });
+
+            for (const timeout of timeouts) {
+                try {
+                    const guild = await this.client.guilds.fetch(timeout.guildId);
+                    if (!guild) {
+                        await ModalService.deleteOne("timeout", { _id: timeout._id });
+                        continue;
+                    }
+
+                    logger.info(`[ModerationService] User ${timeout.userId} timeout has expired on server ${guild.name}.`);
+
+                    const settings = await ModalService.findOne("settings", { guildId: timeout.guildId });
+                    if (settings && settings.logChannelId) {
+                        const modLogChannel = await guild.channels.fetch(settings.logChannelId).catch(() => null);
+                        if (modLogChannel && modLogChannel.type === ChannelTypes.Forum) {
+                            const user = await this.client.users.fetch(timeout.userId).catch(() => null);
+                            if (!user) {
+                                await Guardian.handleGeneric(`User with ID ${timeout.userId} could not be found.`, 'TimeoutCheck');
+                                return;
+                            }
+
+                            const timeoutAttachment = MediaService.getAttachment('mod/Timeout.png');
+                            const timeoutImageURL = MediaService.getAttachmentURL('mod/Timeout.png');
+
+                            if (!timeoutAttachment || !timeoutImageURL) {
+                                await Guardian.handleGeneric('Media for the timeout log could not be loaded.', 'TimeoutCheck');
+                                return;
+                            }
+
+                            const timestamp = formatTimestamp();
+                            const title = `## [${timestamp}] | ACTION: AUTO-TIMEOUT EXPIRED`;
+                            const contentLines = [
+                                `**User:** <@${timeout.userId}> | \`${timeout.userId}\``,
+                                `**Reason:** Timeout has expired`,
+                                `**Original Reason:** ${timeout.reason}`,
+                                `**Case-ID:** \`#${timeout.caseId}\``
+                            ];
+                            const content = contentLines.join('\n');
+
+                            const userAvatarUrl = user.displayAvatarURL();
+                            const container = this.buildContainer(title, content, timeoutImageURL, userAvatarUrl);
+
+                            await logToForum(modLogChannel, container, timeoutAttachment);
+                        }
+                    }
+                } catch (error) {
+                    await Guardian.handleGeneric(`Error processing expired timeout for user ${timeout.userId}.`, 'TimeoutCheck', error.stack);
+                } finally {
+                    await ModalService.updateOne("timeout", { _id: timeout._id }, { active: false });
                 }
             }
         }, 60000);
@@ -297,7 +358,7 @@ class ModerationService {
             }
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId('ban_history_select')
+                .setCustomId('ban-list-select')
                 .setPlaceholder('Wähle einen User, um dessen Ban-Verlauf zu sehen')
                 .addOptions(userOptions.slice(0, 25));
 
@@ -334,6 +395,18 @@ class ModerationService {
             await Guardian.handleCommand("Ein Fehler ist beim Anzeigen des Ban-Verlaufs aufgetreten.", interaction, 'showBans');
         }
     }
+
+    async timeoutAdd(interaction, timeoutData) {}
+
+    async timeoutRemove(interaction, timeoutData) {}
+
+    async showTimeouts(interaction) {}
+
+    async warnAdd(interaction, warnData) {}
+
+    async warnRemove(interaction, warnData) {}
+
+    async showWarns(interaction) {}
 
     buildContainer(titleContent, textContent, imageURL, userAvatarURL) {
         const title = new TextDisplayBuilder().setContent(titleContent);

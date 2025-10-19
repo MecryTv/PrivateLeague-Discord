@@ -18,7 +18,7 @@ class showBans extends Event {
   }
 
   async execute(interaction) {
-        if (!interaction.isStringSelectMenu() || interaction.customId !== 'ban_history_select') {
+        if (!interaction.isStringSelectMenu() || interaction.customId !== 'ban-list-select') {
             return;
         }
 
